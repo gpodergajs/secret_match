@@ -1,8 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Role } from './role.entity';
-import { User } from './user.entity';
+import { Role } from './entity/role.entity';
+import { User } from './entity/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -14,7 +14,7 @@ export class UsersService {
       ) {}
     
       // TODO: create DTO
-      async register_user(createUserDto: any): Promise<User> {
+      async registerUser(createUserDto: any): Promise<User> {
         const bcrypt = require('bcrypt')
         const {name, email, password} = createUserDto;
         // check if the user already exists
@@ -30,7 +30,8 @@ export class UsersService {
           throw new Error('Role "user" not found');
         }
     
-        const hashedPw = await bcrypt.hash(password, 10);
+        const salt = await bcrypt.genSalt();
+        const hashedPw = await bcrypt.hash(password, salt);
         const user = this.userRepository.create({
           name,
           email,
@@ -39,11 +40,8 @@ export class UsersService {
         });
 
         return await this.userRepository.save(user)
-
       }
     
-
-
       async getUserByEmail(email: string): Promise<User> {
         const user =  await this.userRepository.findOne({where: {email}})
         if(!user) {
