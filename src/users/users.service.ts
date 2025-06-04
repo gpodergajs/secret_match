@@ -49,4 +49,9 @@ export class UsersService {
         }
         return user;
       }
+
+    getUserByEmailAndPassword(email: string, password: string): any {
+        throw new Error('Method not implemented.');
+    }
+
 }
