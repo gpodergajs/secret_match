@@ -20,7 +20,7 @@ export class UsersService {
         // check if the user already exists
         const existingUser = await this.userRepository.findOne({where: {email}});
         if (existingUser) {
-          throw new ConflictException("User with that email already exists. Thou shall not pass")
+          throw new ConflictException("User with that email already exists.")
         }
     
         // TODO create enum for role types 

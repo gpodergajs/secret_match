@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { User } from './entity/user.entity';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginRequestDto } from './dto/login-request.dto';
+import { UserDto } from './dto/user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -28,9 +29,12 @@ export class UsersController {
     }
 
     @Get(':email')
-    async getByEmail(@Param('email') email: string): Promise<User> {
+    async getByEmail(@Param('email') email: string): Promise<UserDto> {
         try {
-            return await this.usersService.getUserByEmail(email);
+            // omit the password retrieval
+            const user = await this.usersService.getUserByEmail(email);
+            const { password, ...userDto } = user;
+            return userDto;
         } catch(error) {
             throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
         }
