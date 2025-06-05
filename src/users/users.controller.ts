@@ -1,9 +1,9 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entity/user.entity';
 import { RegisterUserDto } from './dto/register-user.dto';
-import { LoginRequestDto } from './dto/login-request.dto';
 import { UserDto } from './dto/user.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -18,27 +18,16 @@ export class UsersController {
         }
     }
 
-    // TODO: create login dto and auth service flow
-    @Post('login')
-    async login(@Body() loginRequest: LoginRequestDto): Promise<any> {
-        try {
-            return await this.usersService.getUserByEmailAndPassword(loginRequest.email, loginRequest.password);
-        }  catch(error) {
-            throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
-        }
-    }
-
+    @UseGuards(JwtAuthGuard)
     @Get(':email')
     async getByEmail(@Param('email') email: string): Promise<UserDto> {
         try {
             // omit the password retrieval
-            const user = await this.usersService.getUserByEmail(email);
-            const { password, ...userDto } = user;
+            const user = await this.usersService.findByEmail(email);
+            const { password: password, ...userDto } = user;
             return userDto;
         } catch(error) {
             throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
         }
     }
-
-  
 }
