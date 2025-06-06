@@ -58,7 +58,7 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f src/database/schema.sql
 # Optional:
 psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f src/database/data.sql
 ```
-
+or manually trigger sql files in your database manager.
 ---
 
 ### 4. Start the App
@@ -89,7 +89,12 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f src/database/data.sql
   ```json
   {
     "email": "foo@bar.com",
-    "password": "securepass"
+    "password": "securepass",
+    "name": "some name",
+    "preferences": {
+      "pref1": "pref1"
+    },
+    "message" : "message"
   }
   ```
   Returns created user info
@@ -145,7 +150,7 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f src/database/data.sql
    - Register: `POST /users/register`
    - Login: `POST /users/login` → receive token
    - Join event
-   - Perform match actions with JWT
-
+   - Perform matching actions as an admin
+5. Email service triggers after each match assign. Properly configure env variables.
 ---
 
