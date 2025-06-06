@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersEvents } from 'src/event/user-events.entity';
+import { Event } from 'src/event/event.entity';
+import { Match } from 'src/match/entity/match.entity';
 import { Role } from 'src/users/entity/role.entity';
 import { User } from 'src/users/entity/user.entity';
 
@@ -16,7 +19,7 @@ import { User } from 'src/users/entity/user.entity';
                 username: config.get('DB_USERNAME'),
                 password: config.get('DB_PASSWORD'),
                 database: config.get('DB_NAME'),
-                entities: [User, Role] // TODO: find a way to list entities dynamically if possible
+                entities: [User, Role, Match, Event, UsersEvents] // TODO: find a way to list entities dynamically if possible
             }),
             inject: [ConfigService]
         })

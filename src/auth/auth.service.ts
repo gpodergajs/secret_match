@@ -1,13 +1,18 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import { LoginRequestDto } from 'src/users/dto/login-request.dto';
 import { UserDto } from 'src/users/dto/user.dto';
+import { User } from 'src/users/entity/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
+         @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
         private readonly jwtService: JwtService
     ){}
 
@@ -15,7 +20,7 @@ export class AuthService {
     async validateUser(loginRequest: LoginRequestDto): Promise<UserDto> {
         const bcrypt = require('bcrypt')
         const { email, password } = loginRequest
-        const user = await this.usersService.findByEmail(email);
+        const user = await this.userRepository.findOne({where: {email: email}, relations: ['role']})
         
         if(!user) throw new NotFoundException();
 
