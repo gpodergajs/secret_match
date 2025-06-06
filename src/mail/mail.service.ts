@@ -5,7 +5,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 export class MailService {
     constructor(private mailerService: MailerService) { }
 
-    async sendMatchMail(email: string, name: string) {
+    async sendMatchMail(email: string, name: string, matchName: string, location: string) {
         try {
             await this.mailerService.sendMail({
             to: email,
@@ -13,6 +13,8 @@ export class MailService {
             template: './its_a_match',
             context: {
                 name,
+                matchName,
+                location
             },
         });    
         } catch(error) {

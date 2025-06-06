@@ -2,8 +2,6 @@ import { ConflictException, Injectable, InternalServerErrorException, NotFoundEx
 import { Repository } from 'typeorm';
 import { UsersEvents } from './user-events.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Event } from './event.entity'
-import { User } from '../users/entity/user.entity'
 
 @Injectable()
 export class EventService {
@@ -28,7 +26,7 @@ export class EventService {
         try {
             const eventUsers = await this.userEventsRepository.find({
                 where: { event_id: eventId },
-                relations: ['user'] // Include user details if needed
+                relations: ['user', 'event'] // Include user details if needed
             });
 
             return eventUsers;

@@ -22,10 +22,7 @@ export class MatchController {
     @Get('view')
     @HttpCode(HttpStatus.OK)
     async viewEvent(@Query() query: ViewEventQueryDto, @Req() req: any) {
-        if (req.user.userId !== query.userId) {
-            throw new ForbiddenException('You are not authorized to access this data');
-        }
-        return await this.matchService.view(query.userId, query.eventId)
+        return await this.matchService.view(req.user.userId, query.eventId)
     }
 
     // TODO: create role guards

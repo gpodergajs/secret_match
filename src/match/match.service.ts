@@ -9,6 +9,7 @@ import { UsersEvents } from 'src/event/user-events.entity';
 import { EventService } from 'src/event/event.service';
 import { MailService } from 'src/mail/mail.service';
 import { use } from 'passport';
+import { ViewEventResponseDto } from './dto/view-event-response.dto';
 
 @Injectable()
 export class MatchService {
@@ -18,10 +19,6 @@ export class MatchService {
         private readonly eventService: EventService,
         private readonly mailService: MailService
     ) { }
-
-    async sendMail() {
-        await this.mailService.sendMatchMail("gpodergajs@gmail.com", "potatoemasher")
-    }
 
     // TODO: try catch and exception handling nad logging
     async joinEvent(userId: number, eventId: number) {
@@ -55,7 +52,7 @@ export class MatchService {
 
 
 
-    async view(userId: number, eventId: number) {
+    async view(userId: number, eventId: number): Promise<ViewEventResponseDto> {
         try {
             // Validate inputs
             if (!userId || !eventId) {
@@ -69,10 +66,14 @@ export class MatchService {
                 where: [
                     { user1_id: userId, event_id: eventId },
                     { user2_id: userId, event_id: eventId }
-                ]
+                ],
+                relations: ['user1', 'user2']
             });
 
-            return match;
+            if (!match) { throw new NotFoundException('Match not found'); }
+            const viewEventResponse: ViewEventResponseDto = new ViewEventResponseDto();
+            viewEventResponse.matchName = match.user1_id === userId ? match.user2.name : match.user1.name;
+            return viewEventResponse;
         } catch (error) {
             if (error instanceof BadRequestException) {
                 throw error;
@@ -139,12 +140,17 @@ export class MatchService {
                     [savedMatch.user1_id, savedMatch.user2_id].includes(u.user_id),
                 );
 
-                const sendEmails = pair.map(userEvent =>
-                    this.mailService.sendMatchMail(
+                const sendEmails = pair.map(userEvent => {
+                    const matchedUser = pair.find(u => u.user_id !== userEvent.user_id)!;
+
+                    return this.mailService.sendMatchMail(
                         userEvent.user.email,
                         userEvent.user.name,
-                    ),
-                );
+                        matchedUser.user.name,
+                        userEvent.event.location,
+                    );
+                });
+
 
                 await Promise.all(sendEmails);
             }
