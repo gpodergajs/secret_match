@@ -10,7 +10,7 @@ export class UsersController {
     constructor(private readonly usersService: UsersService) {}
 
     @Post('register')
-    async register(@Body() user: RegisterUserDto): Promise<User> {
+    async register(@Body() user: RegisterUserDto): Promise<Omit<User, "password">> {
         try {
             return await this.usersService.registerUser(user);
         } catch(error) {
