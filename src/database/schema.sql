@@ -10,26 +10,16 @@ CREATE TABLE IF NOT EXISTS secret_match.users (
   name     VARCHAR(100)  NOT NULL,
   email    VARCHAR(200)  NOT NULL UNIQUE,
   password VARCHAR(255)  NOT NULL,
-  role_id  INTEGER       NOT NULL,
   message TEXT,
   preferences JSONB,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  role_id  INTEGER       NOT NULL
 
     REFERENCES secret_match.roles(id)
     ON UPDATE CASCADE
     ON DELETE RESTRICT
 );
 
-CREATE TABLE secret_match.matches (
-    id SERIAL PRIMARY KEY,
-    user1_id INTEGER NOT NULL REFERENCES secret_match.users(id) ON DELETE CASCADE,
-    user2_id INTEGER NOT NULL REFERENCES secret_match.users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Prevent duplicate matches and self-matches
-    CONSTRAINT unique_match UNIQUE (user1_id, user2_id),
-    CONSTRAINT no_self_match CHECK (user1_id != user2_id)
-);
 
 
 CREATE TABLE IF NOT EXISTS secret_match.events (
