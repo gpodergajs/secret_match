@@ -5,6 +5,8 @@ import { Role } from './entity/role.entity';
 import { User } from './entity/user.entity';
 import { UserRoles } from 'src/common/user-roles.enum';
 import * as bcrypt from 'bcrypt'
+import { RegisterUserDto } from './dto/register-user.dto';
+import { UserDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -17,9 +19,9 @@ export class UsersService {
 
 
     // fetch all users (without admins)
-    async fetchAllUsers(): Promise<User[]> {
+    async fetchAllUsers(): Promise<UserDto[]> {
         try {
-            return await this.userRepository.find({
+            const users = this.userRepository.find({
                 where: {
                     role: {
                         id: UserRoles.USER
@@ -28,6 +30,8 @@ export class UsersService {
                 relations: ['role'],
                 select: ['id', 'name', 'email'] // Don't include password
             });
+
+            return (await users).map(user => new UserDto(user))
         } catch (error) {
             throw new InternalServerErrorException(
                 `Failed to fetch users: ${error.message}`
@@ -36,9 +40,10 @@ export class UsersService {
     }
 
     // TODO: create DTO
-    async registerUser(createUserDto: any): Promise<Omit<User, 'password'>> {
+    async registerUser(registerUserDto: RegisterUserDto): Promise<UserDto> {
         try {
-            const { name, email, password, roleType = UserRoles.USER } = createUserDto;
+            const { name, email, password } = registerUserDto;
+            const roleType = UserRoles.USER;
 
             // Validate input
             if (!name || !email || !password) {
@@ -67,7 +72,7 @@ export class UsersService {
 
             // Check if the role exists
             const role = await this.roleRepository.findOne({
-                where: { name: roleType }
+                where: { id: roleType }
             });
 
             if (!role) {
@@ -89,8 +94,7 @@ export class UsersService {
             const savedUser = await this.userRepository.save(user);
 
             // Return user without password
-            const { password: _, ...userResponse } = savedUser;
-            return userResponse;
+            return new UserDto(savedUser)
         } catch (error) {
             if (
                 error instanceof ConflictException ||
@@ -111,7 +115,8 @@ export class UsersService {
         }
     }
 
-    async findByEmail(email: string): Promise<User> {
+    // used by authentication service
+    async findByEmail(email: string): Promise<UserDto> {
         try {
             if (!email) {
                 throw new BadRequestException('Email is required');
@@ -126,7 +131,7 @@ export class UsersService {
                 throw new NotFoundException(`User with email ${email} not found`);
             }
 
-            return user;
+            return new UserDto(user);
         } catch (error) {
             if (
                 error instanceof BadRequestException ||
@@ -141,7 +146,7 @@ export class UsersService {
         }
     }
 
-    async findById(id: number): Promise<User> {
+    async findById(id: number): Promise<UserDto> {
         try {
             if (!id || id <= 0) {
                 throw new BadRequestException('Valid user ID is required');
@@ -156,7 +161,7 @@ export class UsersService {
                 throw new NotFoundException(`User with ID ${id} not found`);
             }
 
-            return user;
+            return new UserDto(user);
         } catch (error) {
             if (
                 error instanceof BadRequestException ||

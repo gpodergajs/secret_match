@@ -1,4 +1,11 @@
+import { Exclude, Expose } from "class-transformer";
+
 export class UserDto {
-    name: string;
+    id: number;
     email: string;
+    name: string;
+
+    constructor(partial: Partial<UserDto>) {
+        Object.assign(this, partial);
+    }
 }
