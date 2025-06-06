@@ -4,9 +4,9 @@ import { MatchService } from './match.service';
 import { Roles } from 'src/common/roles.decorator';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { UserRoles } from 'src/common/user-roles.enum';
-import { ViewEventQueryDto } from './dtos/view-event-query.dto';
-import { JoinEventDto } from './dtos/join-event.dto';
-import { AssignMatchesDto } from './dtos/assign-matches.dto';
+import { ViewEventQueryDto } from './dto/view-event-query.dto';
+import { JoinEventDto } from './dto/join-event.dto';
+import { AssignMatchesDto } from './dto/assign-matches.dto';
 
 @Controller('match')
 @UseGuards(JwtAuthGuard, RolesGuard)

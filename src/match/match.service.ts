@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
-import { Match } from './entities/match.entity';
+import { Match } from './entity/match.entity';
 import { User } from 'src/users/entity/user.entity';
 import { Event } from 'src/event/event.entity'
 import { UsersEvents } from 'src/event/user-events.entity';

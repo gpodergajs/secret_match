@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersEvents } from 'src/event/user-events.entity';
 import { Event } from 'src/event/event.entity';
-import { Match } from 'src/match/entities/match.entity';
+import { Match } from 'src/match/entity/match.entity';
 import { Role } from 'src/users/entity/role.entity';
 import { User } from 'src/users/entity/user.entity';
 
