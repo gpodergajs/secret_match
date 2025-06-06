@@ -15,8 +15,8 @@ export class MatchController {
 
     @Post('join')
     @HttpCode(HttpStatus.CREATED)
-    async joinEvent(@Body() joinEventDto: JoinEventDto) {
-        return await this.matchService.joinEvent(joinEventDto.userId, joinEventDto.eventId)
+    async joinEvent(@Body() joinEventDto: JoinEventDto, @Req() req: any) {
+        return await this.matchService.joinEvent(req.user.userId, req.user.role, joinEventDto.eventId)
     }
 
     @Get('view')

@@ -1,9 +1,6 @@
-
-
 INSERT INTO secret_match.roles (name)
 VALUES ('admin'), ('user') 
 ON CONFLICT (name) DO NOTHING;
-
 
 INSERT INTO secret_match.events (name, description, event_date, location)
 VALUES (
@@ -13,15 +10,15 @@ VALUES (
   'Green Dragon Inn, Hobbiton, New Zealand'
 );
 
--- pw: admin - this can be used to assign roles
+-- pw: admin
 INSERT INTO secret_match.users (name, email, password, role_id, message, preferences)
 VALUES (
   'admin',
   'admin@gmail.com',
-  '$2b$12$WZRbdTfCjYp2Mz9jJtgssOPWm/6Jps5ZK/yWML/1TrhO2PITMZfhK',
+  '$2b$12$zQLvC2wkL6t7k0h2ZraT9Osc3puC2jxQwNPAk9tRZZCs5lkuAqvN6',
   1,
   'System administrator',
-  '{"theme": "dark", "notifications": true}'
+  '{"theme": "dark", "notifications": "True"}'
 );
 
 -- pw: theonering
@@ -29,7 +26,7 @@ INSERT INTO secret_match.users (name, email, password, role_id, message, prefere
 VALUES (
   'Frodo Baggins',
   'frodo@shire.me',
-  '$2b$12$nQxPbFXqBvZWWSD5xbFc/ePUTnwBp1eW29LAYiJ6CdN2xeJPQCCym',
+  '$2b$12$zO/XVSz6OJAk5LZVj2WZiOsWXi/rs65ZOXQY78XAvu7Sd2LF3ijvy',
   2,
   'I will take the Ring to Mordor!',
   '{"favorite_food": "Lembas", "fear": "Nazgûl"}'
@@ -40,7 +37,7 @@ INSERT INTO secret_match.users (name, email, password, role_id, message, prefere
 VALUES (
   'Aragorn',
   'aragorn@numenor.gov',
-  '$2b$12$BkczJ8mBkBjtb7.IrVhACe4uzETYCI6vyefEN5sCEcbigjN99ABDu',
+  '$2b$12$Wh02SsaJeTFMeF/M/t9iDOpNxIG7khaZpkRpbN8lpTuQsiey44Emu',
   2,
   'For Frodo.',
   '{"sword": "Andúril", "race": "Dúnedain"}'
@@ -51,10 +48,10 @@ INSERT INTO secret_match.users (name, email, password, role_id, message, prefere
 VALUES (
   'Arwen Undómiel',
   'arwen@rivendell.org',
-  '$2b$12$MCxJ2/cu8nA0B99EoACKnOlmCckt0YXz/L0fH6RDVi3XPYnB3GGKi',
+  '$2b$12$XYCJqXM7QNbYU4okmXB7B.jQEikr2ZFBSM/KURxgEgy6.hS1RqAqm',
   2,
   'I choose a mortal life.',
-  '{"affiliation": "Elves", "magic": true}'
+  '{"affiliation": "Elves", "magic": "True"}'
 );
 
 -- pw: secondbreakfast
@@ -62,10 +59,10 @@ INSERT INTO secret_match.users (name, email, password, role_id, message, prefere
 VALUES (
   'Samwise Gamgee',
   'samwise@hobbiton.net',
-  '$2b$12$wVNQ2voymo0cj0ObZsp2luYuJsAf/5gn46xpZ/xrDLsUJs2jofuCu',
+  '$2b$12$3H7LIsNFN2GQRdEnO8aar.wrGk6ODTHIQkl8Z1m1Ns6ptjzNdK4YO',
   2,
-  'There’s some good in this world, Mr. Frodo.',
-  '{"garden": true, "loyalty": "Frodo"}'
+  'There''s some good in this world, Mr. Frodo.',
+  '{"garden": "True", "loyalty": "Frodo"}'
 );
 
 -- pw: mithrandir123
@@ -73,7 +70,7 @@ INSERT INTO secret_match.users (name, email, password, role_id, message, prefere
 VALUES (
   'Gandalf the Grey',
   'gandalf@istari.org',
-  '$2b$12$rcmP/Fiowt.pZxAvx1s4SujyDK8ZclfgfaZtM6Asr1DqaLShzCjFm',
+  '$2b$12$p4QfW38P4k47sTvirP7KIu/2Mo0CBrGJbg9c06yJw2TGzH6guIbVq',
   2,
   'A wizard is never late.',
   '{"staff": "Glamdring", "role": "guide"}'
@@ -84,9 +81,9 @@ INSERT INTO secret_match.users (name, email, password, role_id, message, prefere
 VALUES (
   'Legolas',
   'legolas@woodlandrealm.el',
-  '$2b$12$3HV3E0X9oJ9aQ2lwXQDBZOJMR.UNGh/lbc69QR/4U2S.hQrrmRAe6',
+  '$2b$12$cA580FX0fe2otkrxxl9lq.eyD9UJysScXX0vWSmf7w.GvUly2A02q',
   2,
-  'They’re taking the Hobbits to Isengard!',
+  'They''re taking the Hobbits to Isengard!',
   '{"bow": "Galadhrim", "race": "Elf"}'
 );
 
@@ -95,10 +92,10 @@ INSERT INTO secret_match.users (name, email, password, role_id, message, prefere
 VALUES (
   'Gollum',
   'gollum@mountdoom.dark',
-  '$2b$12$C.SxWWRugUzP8rviabGQBuY0XzCieRfelGu6AHKl4n68mutjZ6r6i',
+  '$2b$12$oBH7KDoTOdUtFb4Ww6TGFe9ojhrRA/gY35PH0/i9XVmp0/XQh2WK.',
   2,
   'We wants it, we needs it!',
-  '{"split_personality": true, "obsession": "the One Ring"}'
+  '{"split_personality": "True", "obsession": "the One Ring"}'
 );
 
 -- pw: khazaddum!
@@ -106,18 +103,18 @@ INSERT INTO secret_match.users (name, email, password, role_id, message, prefere
 VALUES (
   'Gimli',
   'gimli@erebor.dwf',
-  '$2b$12$Snc3GO/fsRadSKewux9kWuQH4UsomHO1zdU3KU3o0VVhvSmVz56Fe',
+  '$2b$12$7ke4Zp8WwseV3TVnBAO5zOLKGWxnVaJiAnF3vAgOt5zJ8h8GMF3m.',
   2,
   'Nobody tosses a Dwarf!',
   '{"axe_type": "battle", "rival": "Legolas"}'
 );
 
 INSERT INTO secret_match.users_events (event_id, user_id) VALUES
-(1, 1),
 (1, 2),
 (1, 3),
 (1, 4),
 (1, 5),
 (1, 6),
 (1, 7),
-(1, 8);
+(1, 8),
+(1, 9);

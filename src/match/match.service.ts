@@ -10,6 +10,7 @@ import { EventService } from 'src/event/event.service';
 import { MailService } from 'src/mail/mail.service';
 import { use } from 'passport';
 import { ViewEventResponseDto } from './dto/view-event-response.dto';
+import { UserRoles } from 'src/common/user-roles.enum';
 
 @Injectable()
 export class MatchService {
@@ -21,11 +22,15 @@ export class MatchService {
     ) { }
 
     // TODO: try catch and exception handling nad logging
-    async joinEvent(userId: number, eventId: number) {
+    async joinEvent(userId: number, roleId: number, eventId: number) {
         try {
             // Validate inputs
             if (!userId || !eventId) {
                 throw new BadRequestException('User ID and Event ID are required');
+            }
+
+            if (roleId === UserRoles.ADMIN) {
+                throw new BadRequestException('Admins cannot join the event. That would be cheating');
             }
 
             // Check if user is already in the event
