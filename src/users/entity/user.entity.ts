@@ -29,4 +29,10 @@ export class User {
 
     @OneToMany(() => Match, match => match.user2)
     matchesAsUser2: Match[];
+
+    @Column({ type: 'text', nullable: true })
+    message?: string;
+
+    @Column({ type: 'jsonb', nullable: true })
+    preferences?: Record<string, any>;
 }

@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsObject, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 
 export class RegisterUserDto {
   @IsEmail({}, { message: 'Email must be a valid email address.' })
@@ -21,4 +21,13 @@ export class RegisterUserDto {
   @MinLength(2, { message: 'Full name must be at least 2 characters long.' })
   @MaxLength(50, { message: 'Full name cannot exceed 50 characters.' })
   readonly name: string;
+
+  @IsOptional()
+  @IsString({ message: 'Message must be a string.' })
+  @MaxLength(500, { message: 'Message cannot exceed 500 characters.' })
+  readonly message?: string;
+
+  @IsOptional()
+  @IsObject({ message: 'Preferences must be a valid object.' })
+  readonly preferences?: Record<string, any>;
 }
