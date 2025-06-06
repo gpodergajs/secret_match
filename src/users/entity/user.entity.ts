@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Role } from "./role.entity";
 import { UsersEvents } from "src/event/user-events.entity";
-import { Match } from "src/match/match.entity";
+import { Match } from "src/match/entities/match.entity";
 
 @Entity({ schema: 'secret_match', name: 'users' })
 export class User {

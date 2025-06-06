@@ -1,4 +1,4 @@
-import { Match } from 'src/match/match.entity';
+import { Match } from 'src/match/entities/match.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { UsersEvents } from './user-events.entity';
 
