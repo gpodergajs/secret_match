@@ -5,7 +5,9 @@ export class UserDto {
     email: string;
     name: string;
 
-    constructor(partial: Partial<UserDto>) {
-        Object.assign(this, partial);
+    constructor(user: Partial<UserDto>) {
+        this.id = user.id!;
+        this.name = user.name!
+        this.email = user.email!;
     }
 }
