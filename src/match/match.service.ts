@@ -2,18 +2,26 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
-import { Match } from './match.entity';
+import { Match } from './entities/match.entity';
 import { User } from 'src/users/entity/user.entity';
 import { Event } from 'src/event/event.entity'
 import { UsersEvents } from 'src/event/user-events.entity';
 import { EventService } from 'src/event/event.service';
+import { MailService } from 'src/mail/mail.service';
+import { use } from 'passport';
 
 @Injectable()
 export class MatchService {
     constructor(
         @InjectRepository(Match)
         private readonly matchRepo: Repository<Match>,
-        private readonly eventService: EventService) { }
+        private readonly eventService: EventService,
+        private readonly mailService: MailService
+    ) { }
+
+    async sendMail() {
+        await this.mailService.sendMatchMail("gpodergajs@gmail.com", "potatoemasher")
+    }
 
     // TODO: try catch and exception handling nad logging
     async joinEvent(userId: number, eventId: number) {
@@ -125,12 +133,29 @@ export class MatchService {
             // Save all matches in a transaction
             const savedMatches = await this.matchRepo.save(matches);
 
+            // Send all matched users mail ( send in parallel )
+            for (const savedMatch of savedMatches) {
+                const pair = userEvents.filter(u =>
+                    [savedMatch.user1_id, savedMatch.user2_id].includes(u.user_id),
+                );
+
+                const sendEmails = pair.map(userEvent =>
+                    this.mailService.sendMatchMail(
+                        userEvent.user.email,
+                        userEvent.user.name,
+                    ),
+                );
+
+                await Promise.all(sendEmails);
+            }
+
             return savedMatches;
         } catch (error) {
             // Re-throw known exceptions
             if (
                 error instanceof BadRequestException ||
-                error instanceof NotFoundException
+                error instanceof NotFoundException ||
+                error instanceof InternalServerErrorException
             ) {
                 throw error;
             }

@@ -4,40 +4,36 @@ import { MatchService } from './match.service';
 import { Roles } from 'src/common/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UserRoles } from 'src/common/user-roles.enum';
+import { ViewEventQueryDto } from './dtos/view-event-query.dto';
+import { JoinEventDto } from './dtos/join-event.dto';
+import { AssignMatchesDto } from './dtos/assign-matches.dto';
 
 @Controller('match')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MatchController {
     constructor(private readonly matchService: MatchService) { }
 
-    @UseGuards(JwtAuthGuard)
     @Post('join')
     @HttpCode(HttpStatus.CREATED)
-    async joinEvent(@Body() matchJoinDto: any) {
-        return this.matchService.joinEvent(matchJoinDto.userId, matchJoinDto.eventId)
-
-        //return this.matchService.join(userId, round);
+    async joinEvent(@Body() joinEventDto: JoinEventDto) {
+        return await this.matchService.joinEvent(joinEventDto.userId, joinEventDto.eventId)
     }
 
-    @UseGuards(JwtAuthGuard)
     @Get('view')
     @HttpCode(HttpStatus.OK)
-    async viewEvent(@Query('userId', ParseIntPipe) userId: number,
-        @Query('eventId', ParseIntPipe) eventId: number,
-        @Req() req: any) {
-     
-        if(req.user.userId !== userId) {
+    async viewEvent(@Query() query: ViewEventQueryDto, @Req() req: any) {
+        if (req.user.userId !== query.userId) {
             throw new ForbiddenException('You are not authorized to access this data');
-        }    
-        return this.matchService.view(userId, eventId)
+        }
+        return await this.matchService.view(query.userId, query.eventId)
     }
 
     // TODO: create role guards
     @Post('assign')
     @Roles(UserRoles.ADMIN)
-    @HttpCode(HttpStatus.OK)
-    async assign(@Body() assignDto: any) {
-        return this.matchService.assign(assignDto.eventId);
+    @HttpCode(HttpStatus.CREATED)
+    async assign(@Body() assignDto: AssignMatchesDto) {
+        return await this.matchService.assign(assignDto.eventId)
     }
 }
 
