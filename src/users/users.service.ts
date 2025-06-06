@@ -42,7 +42,7 @@ export class UsersService {
     // TODO: create DTO
     async registerUser(registerUserDto: RegisterUserDto): Promise<UserDto> {
         try {
-            const { name, email, password } = registerUserDto;
+            const { name, email, password, message, preferences } = registerUserDto;
             const roleType = UserRoles.USER;
 
             // Validate input
@@ -88,6 +88,8 @@ export class UsersService {
                 name: name.trim(),
                 email: email.toLowerCase().trim(),
                 password: hashedPassword,
+                message: message,
+                preferences: preferences,
                 role,
             });
 
