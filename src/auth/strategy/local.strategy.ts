@@ -8,7 +8,10 @@ import { LoginRequestDto } from 'src/users/dto/login-request.dto';
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(private authService: AuthService) {
-    super();
+    super({
+        usernameField: 'email',
+        passwordField: 'password'
+    });
   }
 
   // intercepts the login flow - validates the user before continuing
