@@ -1,98 +1,151 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# 🏗 NestJS API Project
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A simple NestJS API with user management, JWT-based authentication, health check, and match operations. Database is initialized via SQL scripts in `src/database/`.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🔧 Setup & Installation
 
-## Project setup
+### 1. Clone & Install
 
 ```bash
-$ npm install
+git clone https://github.com/gpodergajs/secret_match.git
+cd secret_match
+npm install
 ```
 
-## Compile and run the project
+### 2. Environment Variables
+
+Edit the `.env` file with your settings:
+
+```env
+# Database Configuration
+DB_TYPE=postgres
+DB_NAME=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_PORT=5433
+DB_HOST=localhost
+
+# JWT Configuration
+JWT_SECRET=jwt_secret
+JWT_EXPIRES_IN=1H
+
+# Application Configuration
+NODE_ENV=development
+PORT=8080
+
+# Mail service configuration
+EMAIL_USER=something@gmail.com
+EMAIL_PASS=pass
+EMAIL_HOST=gmail
+```
+
+---
+
+### 3. Database Initialization
+
+In `src/database/`, you have:
+
+- `schema.sql` – defines tables  
+- `data.sql` – optional seed data  
+
+Execute:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f src/database/schema.sql
+# Optional:
+psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f src/database/data.sql
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+### 4. Start the App
 
-# e2e tests
-$ npm run test:e2e
+- **Development** mode:
 
-# test coverage
-$ npm run test:cov
-```
+  ```bash
+  npm run start:dev
+  ```
+---
 
-## Deployment
+## 🚀 API Endpoints
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Health Check – `AppController`
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- **GET** `/health`  
+  Returns:
+  ```json
+  { "status": "ok" }
+  ```
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### User Management – `UsersController`
 
-## Resources
+- **POST** `/users/register`  
+  Body:
+  ```json
+  {
+    "email": "foo@bar.com",
+    "password": "securepass"
+  }
+  ```
+  Returns created user info
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Authentication – `AuthController`
 
-## Support
+- **POST** `/users/login`  
+  Body:
+  ```json
+  {
+    "email": "foo@bar.com",
+    "password": "securepass"
+  }
+  ```
+  Returns a JWT token on success - access token
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+### Match Management – `MatchController`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- **POST** `/match/join`  
+  Body:
+  ```json
+  {
+    "eventId": 1
+  }
+  ```
+  Joins a user to an event. Must be authenticated.
 
-## License
+- **GET** `/match/view`  
+  Get user matches for latest round per event -> match/view?eventId=1 etc. Must be authenticated.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **POST** `/match/assign`  
+  Body:
+  ```json
+  {
+    "eventId": 1
+  }
+  ```
+  Assigns all users of an event a match. Round based, each round creates new matches. Only an admin can assign matches. Must be authenticated.
+
+---
+
+## ✅ Usage Flow
+
+1. Configure `.env` with your DB JWT and mailing settings  
+2. Run SQL scripts: `schema.sql` (and optionally `data.sql`)  
+3. Start the server with `npm run start:dev`  
+4. Use Swagger/Postman/cURL to:
+   - Health check: `GET /health`
+   - Register: `POST /users/register`
+   - Login: `POST /users/login` → receive token
+   - Join event
+   - Perform match actions with JWT
+
+---
+

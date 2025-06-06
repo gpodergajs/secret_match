@@ -4,7 +4,6 @@ import { User } from './entity/user.entity';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UserDto } from './dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guard/roles.guard';
 
 @Controller('users')
 export class UsersController {
