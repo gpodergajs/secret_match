@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS secret_match.users (
   email    VARCHAR(200)  NOT NULL UNIQUE,
   password VARCHAR(255)  NOT NULL,
   role_id  INTEGER       NOT NULL,
+  message TEXT,
+  preferences JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
     REFERENCES secret_match.roles(id)
