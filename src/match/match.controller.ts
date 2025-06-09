@@ -10,7 +10,7 @@ import { AssignMatchesDto } from './dto/assign-matches.dto';
 import { MatchAssignmentExceptionFilter } from 'src/common/filters/match-asignment-exception.filter';
 import { JoinEventExceptionFilter } from 'src/common/filters/join-event.filter';
 import { ViewEventExceptionFilter } from 'src/common/filters/view-event-exception.filter';
-import { EmailServiceExceptionFilter } from 'src/common/filters/email-service-exception.filter';
+import { MailServiceExceptionFilter } from 'src/common/filters/mail-service-exception.filter';
 import { EventServiceExceptionFilter } from 'src/common/filters/event-service-exception.filter';
 
 @Controller('match')
@@ -35,7 +35,7 @@ export class MatchController {
 
     @Post('assign')
     @Roles(UserRoles.ADMIN)
-    @UseFilters(MatchAssignmentExceptionFilter, EmailServiceExceptionFilter)
+    @UseFilters(MatchAssignmentExceptionFilter, MailServiceExceptionFilter)
     @HttpCode(HttpStatus.CREATED)
     async assign(@Body() assignDto: AssignMatchesDto) {
         return await this.matchService.assign(assignDto.eventId)

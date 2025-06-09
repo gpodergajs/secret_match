@@ -7,7 +7,7 @@ import { MailService } from 'src/mail/mail.service';
 import { ViewEventResponseDto } from './dto/view-event-response.dto';
 import { UserRoles } from 'src/common/enums/user-roles.enum';
 import { MatchAssignmentException } from 'src/common/exceptions/match-assignment.exception';
-import { EmailServiceException } from 'src/common/exceptions/email-service.exception';
+import { MailServiceException } from 'src/common/exceptions/mail-service.exception';
 import { JoinEventException } from 'src/common/exceptions/join-event.exception';
 import { ViewEventException } from 'src/common/exceptions/view-event.exception';
 import { UsersEvents } from 'src/event/user-events.entity';
@@ -191,7 +191,7 @@ export class MatchService {
                         matchedUser.user.name,
                         userEvent.event.location,
                     );
-                    
+
                     this.logger.log(`Successfully sent match notification emails for user ${userEvent.user.id} and user ${matchedUser.user_id} matches`);
                     return sentMatchMail
                 } catch (error) {
@@ -209,14 +209,14 @@ export class MatchService {
         try {
             await Promise.allSettled(emailPromises);
         } catch (error) {
-            throw new EmailServiceException(
+            throw new MailServiceException(
                 'Some notification emails failed to send',
                 failedEmails
             );
         }
 
         if (failedEmails.length > 0) {
-            throw new EmailServiceException(
+            throw new MailServiceException(
                 `Failed to send emails to ${failedEmails.length} recipients`,
                 failedEmails
             );

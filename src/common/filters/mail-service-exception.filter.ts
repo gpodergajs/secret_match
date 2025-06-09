@@ -1,11 +1,11 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
-import { EmailServiceException } from "../exceptions/email-service.exception";
+import { MailServiceException } from "../exceptions/mail-service.exception";
 
-@Catch(EmailServiceException)
-export class EmailServiceExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(EmailServiceExceptionFilter.name);
+@Catch(MailServiceException)
+export class MailServiceExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(MailServiceExceptionFilter.name);
 
-  catch(exception: EmailServiceException, host: ArgumentsHost) {
+  catch(exception: MailServiceException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
