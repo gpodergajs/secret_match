@@ -10,33 +10,16 @@ export class EventService {
 
     // find a user for an event
     async findUserEvent(userId: number, eventId: number) {
-
-        try {
-            return await this.userEventsRepository.findOne({
-              where: { user_id: userId, event_id: eventId },
-            });
-          } catch (error) {
-            throw new EventServiceException(
-              `DB lookup failed: ${error.message}`,
-              'FIND_USER_EVENT_ERROR',
-            );
-          }
+        return await this.userEventsRepository.findOne({
+            where: { user_id: userId, event_id: eventId },
+        });
     }
 
     async findAllEventUsers(eventId: number) {
-        try {
-            const eventUsers = await this.userEventsRepository.find({
-                where: { event_id: eventId },
-                relations: ['user', 'event'] // Include user details if needed
-            });
-
-            return eventUsers;
-        } catch (error) {
-            throw new EventServiceException(
-                `DB lookup failed: ${error.message}`,
-                'FIND_ALL_EVENT_USERS_ERROR',
-              );
-        }
+        return await this.userEventsRepository.find({
+            where: { event_id: eventId },
+            relations: ['user', 'event'] // Include user details if needed
+        });
     }
 
     // create a user in an event

@@ -10,15 +10,17 @@ import { MatchAssignmentException } from 'src/common/exceptions/match-assignment
 import { EmailServiceException } from 'src/common/exceptions/email-service.exception';
 import { JoinEventException } from 'src/common/exceptions/join-event.exception';
 import { ViewEventException } from 'src/common/exceptions/view-event.exception';
+import { UsersEvents } from 'src/event/user-events.entity';
 
 @Injectable()
 export class MatchService {
+    private readonly logger = new Logger(MatchService.name)
+
     constructor(
         @InjectRepository(Match)
         private readonly matchRepo: Repository<Match>,
         private readonly eventService: EventService,
         private readonly mailService: MailService,
-        private readonly logger = new Logger(MatchService.name)
     ) { }
 
     // TODO: try catch and exception handling nad logging
@@ -48,8 +50,10 @@ export class MatchService {
             );
         }
 
-        return this.eventService.createUserEvent(userId, eventId);
 
+        const newUserEvent = await this.eventService.createUserEvent(userId, eventId);
+        this.logger.log(`User ${userId} successfully joined event ${eventId} with role ${roleId}`);
+        return newUserEvent;
     }
 
 
@@ -87,6 +91,8 @@ export class MatchService {
         const dto = new ViewEventResponseDto();
         dto.matchName =
             match.user1_id === userId ? match.user2.name : match.user1.name;
+
+        this.logger.log(`User ${userId} viewed match in event ${eventId}`);
         return dto;
     }
 
@@ -148,6 +154,7 @@ export class MatchService {
 
         // Save all matches in a transaction
         const savedMatches = await this.matchRepo.save(matches);
+        this.logger.log(`Assigned ${savedMatches.length} matches for event ${eventId}, round ${nextRound}`);
 
         // Send all matched users mail ( send in parallel )
         this.sendMatchNotifications(savedMatches, userEvents).catch(error => {
@@ -165,7 +172,7 @@ export class MatchService {
     // private methode that handles sending match emails ( handlers failed dispatches accordingly )
     private async sendMatchNotifications(
         savedMatches: Match[],
-        userEvents: any[]
+        userEvents: UsersEvents[]
     ): Promise<void> {
         const emailPromises: Promise<any>[] = [];
         const failedEmails: string[] = [];
@@ -178,12 +185,15 @@ export class MatchService {
             const pairEmailPromises = pair.map(async userEvent => {
                 try {
                     const matchedUser = pair.find(u => u.user_id !== userEvent.user_id)!;
-                    return await this.mailService.sendMatchMail(
+                    const sentMatchMail =  await this.mailService.sendMatchMail(
                         userEvent.user.email,
                         userEvent.user.name,
                         matchedUser.user.name,
                         userEvent.event.location,
                     );
+                    
+                    this.logger.log(`Successfully sent match notification emails for user ${userEvent.user.id} and user ${matchedUser.user_id} matches`);
+                    return sentMatchMail
                 } catch (error) {
                     failedEmails.push(userEvent.user.email);
                     this.logger.warn(`Failed to send email to ${userEvent.user.email}`, error);
@@ -211,6 +221,8 @@ export class MatchService {
                 failedEmails
             );
         }
+
+        this.logger.log(`Successfully sent match notification emails for ${emailPromises.length - failedEmails.length} matches`);
     }
 
 
