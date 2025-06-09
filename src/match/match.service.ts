@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Match } from './entity/match.entity';
@@ -8,6 +8,8 @@ import { ViewEventResponseDto } from './dto/view-event-response.dto';
 import { UserRoles } from 'src/common/enums/user-roles.enum';
 import { MatchAssignmentException } from 'src/common/exceptions/match-assignment.exception';
 import { EmailServiceException } from 'src/common/exceptions/email-service.exception';
+import { JoinEventException } from 'src/common/exceptions/join-event.exception';
+import { ViewEventException } from 'src/common/exceptions/view-event.exception';
 
 @Injectable()
 export class MatchService {
@@ -21,73 +23,71 @@ export class MatchService {
 
     // TODO: try catch and exception handling nad logging
     async joinEvent(userId: number, roleId: number, eventId: number) {
-        try {
-            // Validate inputs
-            if (!userId || !eventId) {
-                throw new BadRequestException('User ID and Event ID are required');
-            }
-
-            if (roleId === UserRoles.ADMIN) {
-                throw new BadRequestException('Admins cannot join the event. That would be cheating');
-            }
-
-            // Check if user is already in the event
-            const userEvent = await this.eventService.findUserEvent(userId, eventId);
-            if (userEvent) {
-                throw new ConflictException(
-                    `User ${userId} is already registered for event ${eventId}`
-                );
-            }
-
-            // Create the user-event relationship
-            // TODO: create proper output
-            return await this.eventService.createUserEvent(userId, eventId);
-        } catch (error) {
-            // Re-throw known exceptions
-            if (error instanceof ConflictException || error instanceof BadRequestException) {
-                throw error;
-            }
-
-            throw new InternalServerErrorException(
-                `Failed to join event: ${error.message}`
+        if (!userId || !eventId) {
+            throw new JoinEventException(
+                'User ID and Event ID are required',
+                'MISSING_EVENT_OR_USER',
+                HttpStatus.BAD_REQUEST,
             );
         }
+
+        if (roleId === UserRoles.ADMIN) {
+            throw new JoinEventException(
+                'Admins cannot join the event. That would be cheating',
+                'ADMIN_CANNOT_JOIN',
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+
+        const existing = await this.eventService.findUserEvent(userId, eventId);
+        if (existing) {
+            throw new JoinEventException(
+                `User ${userId} is already registered for event ${eventId}`,
+                'ALREADY_REGISTERED',
+                HttpStatus.CONFLICT,
+            );
+        }
+
+        return this.eventService.createUserEvent(userId, eventId);
+
     }
 
 
 
     async view(userId: number, eventId: number): Promise<ViewEventResponseDto> {
-        try {
-            // Validate inputs
-            if (!userId || !eventId) {
-                throw new BadRequestException('User ID and Event ID are required');
-            }
-
-            const match = await this.matchRepo.findOne({
-                order: {
-                    round_number: "DESC"
-                },
-                where: [
-                    { user1_id: userId, event_id: eventId },
-                    { user2_id: userId, event_id: eventId }
-                ],
-                relations: ['user1', 'user2']
-            });
-
-            if (!match) { throw new NotFoundException('Match not found'); }
-            const viewEventResponse: ViewEventResponseDto = new ViewEventResponseDto();
-            viewEventResponse.matchName = match.user1_id === userId ? match.user2.name : match.user1.name;
-            return viewEventResponse;
-        } catch (error) {
-            if (error instanceof BadRequestException) {
-                throw error;
-            }
-
-            throw new InternalServerErrorException(
-                `Failed to retrieve match: ${error.message}`
+        
+        // Validate infput
+        if (!userId || !eventId) {
+            throw new ViewEventException(
+                'User ID and Event ID are required',
+                'MISSING_EVENT_OR_USER',
+                400,
             );
         }
 
+        // Check if any match is found for user
+        const match = await this.matchRepo.findOne({
+            order: { round_number: 'DESC' },
+            where: [
+                { user1_id: userId, event_id: eventId },
+                { user2_id: userId, event_id: eventId },
+            ],
+            relations: ['user1', 'user2'],
+        });
+
+        if (!match) {
+            throw new ViewEventException(
+                `No match found for user ${userId} in event ${eventId}`,
+                'MATCH_NOT_FOUND',
+                404,
+            );
+        }
+
+        // Create response and return
+        const dto = new ViewEventResponseDto();
+        dto.matchName =
+            match.user1_id === userId ? match.user2.name : match.user1.name;
+        return dto;
     }
 
     async assign(eventId: number): Promise<any> {
@@ -97,7 +97,7 @@ export class MatchService {
             throw new MatchAssignmentException(
                 'Valid Event ID is required',
                 'INVALID_EVENT_ID',
-                400
+                HttpStatus.BAD_REQUEST
             );
         }
 
@@ -106,7 +106,7 @@ export class MatchService {
         if (!userEvents || userEvents.length === 0) {
             throw new MatchAssignmentException(
                 `No users registered for event ${eventId}`,
-                'NO_USERS_FOUND', 404);
+                'NO_USERS_FOUND', HttpStatus.NOT_FOUND);
 
         }
 
@@ -116,7 +116,7 @@ export class MatchService {
             throw new MatchAssignmentException(
                 `Insufficient users for matching. Found ${user_ids.length} users, minimum required: 2`,
                 'INSUFFICIENT_USERS',
-                400
+                HttpStatus.BAD_REQUEST
             );
         }
 
@@ -132,7 +132,7 @@ export class MatchService {
             throw new MatchAssignmentException(
                 'Unable to create valid user pairs for matching',
                 'PAIRING_FAILED',
-                400
+                HttpStatus.BAD_REQUEST
             );
         }
 
@@ -248,7 +248,7 @@ export class MatchService {
 
         // Log if there's an odd number of users
         if (userIds.length % 2 !== 0) {
-            console.warn(`Event has odd number of users (${userIds.length}). User ${userIds[userIds.length - 1]} will not be paired this round.`);
+            this.logger.warn(`Event has odd number of users (${userIds.length}). User ${userIds[userIds.length - 1]} will not be paired this round.`);
         }
 
         return pairs;
