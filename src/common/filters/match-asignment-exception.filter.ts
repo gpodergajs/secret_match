@@ -1,28 +1,12 @@
-import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
+import { Catch } from "@nestjs/common";
 import { MatchAssignmentException } from "../exceptions/match-assignment.exception";
+import { BaseExceptionFilter } from "./base-exception.filter";
 
-// filter for match assignment business logic
 @Catch(MatchAssignmentException)
-export class MatchAssignmentExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(MatchAssignmentExceptionFilter.name);
+export class MatchAssignmentExceptionFilter extends BaseExceptionFilter<MatchAssignmentException> {
+  protected readonly errorType = 'Match Assignment Error';
 
-  catch(exception: MatchAssignmentException, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
-    const request = ctx.getRequest();
-
-    this.logger.error(`Match assignment error: ${exception.message}`, {
-      code: exception.code,
-      path: request.url,
-    });
-
-    response.status(exception.statusCode).json({
-      statusCode: exception.statusCode,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      error: 'Match Assignment Error',
-      code: exception.code,
-      message: exception.message,
-    });
+  constructor() {
+    super(MatchAssignmentExceptionFilter.name);
   }
 }
