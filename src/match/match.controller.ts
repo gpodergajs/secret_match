@@ -1,9 +1,9 @@
 import { Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, ParseIntPipe, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { MatchService } from './match.service';
-import { Roles } from 'src/common/roles.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
-import { UserRoles } from 'src/common/user-roles.enum';
+import { UserRoles } from 'src/common/enums/user-roles.enum';
 import { ViewEventQueryDto } from './dto/view-event-query.dto';
 import { JoinEventDto } from './dto/join-event.dto';
 import { AssignMatchesDto } from './dto/assign-matches.dto';

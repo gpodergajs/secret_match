@@ -1,16 +1,13 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
 import { Match } from './entity/match.entity';
-import { User } from 'src/users/entity/user.entity';
-import { Event } from 'src/event/event.entity'
-import { UsersEvents } from 'src/event/user-events.entity';
 import { EventService } from 'src/event/event.service';
 import { MailService } from 'src/mail/mail.service';
-import { use } from 'passport';
 import { ViewEventResponseDto } from './dto/view-event-response.dto';
-import { UserRoles } from 'src/common/user-roles.enum';
+import { UserRoles } from 'src/common/enums/user-roles.enum';
+import { MatchAssignmentException } from 'src/common/exceptions/match-assignment.exception';
+import { EmailServiceException } from 'src/common/exceptions/email-service.exception';
 
 @Injectable()
 export class MatchService {
@@ -18,7 +15,8 @@ export class MatchService {
         @InjectRepository(Match)
         private readonly matchRepo: Repository<Match>,
         private readonly eventService: EventService,
-        private readonly mailService: MailService
+        private readonly mailService: MailService,
+        private readonly logger = new Logger(MatchService.name)
     ) { }
 
     // TODO: try catch and exception handling nad logging
@@ -42,6 +40,7 @@ export class MatchService {
             }
 
             // Create the user-event relationship
+            // TODO: create proper output
             return await this.eventService.createUserEvent(userId, eventId);
         } catch (error) {
             // Re-throw known exceptions
@@ -92,103 +91,128 @@ export class MatchService {
     }
 
     async assign(eventId: number): Promise<any> {
-        try {
-            // Validate input
-            if (!eventId) {
-                throw new BadRequestException('Event ID is required');
-            }
 
-            // Get all event users
-            const userEvents = await this.eventService.findAllEventUsers(eventId);
+        // Validate input
+        if (!eventId || eventId <= 0) {
+            throw new MatchAssignmentException(
+                'Valid Event ID is required',
+                'INVALID_EVENT_ID',
+                400
+            );
+        }
 
-            if (!userEvents || userEvents.length === 0) {
-                throw new NotFoundException(`No users found for event ${eventId}`);
-            }
+        // Get all event users
+        const userEvents = await this.eventService.findAllEventUsers(eventId);
+        if (!userEvents || userEvents.length === 0) {
+            throw new MatchAssignmentException(
+                `No users registered for event ${eventId}`,
+                'NO_USERS_FOUND', 404);
 
-            const user_ids = userEvents.map(user => user.user_id);
+        }
 
-            // Check if we have enough users for pairing
-            if (user_ids.length < 2) {
-                throw new BadRequestException(
-                    `Not enough users to create matches. Found ${user_ids.length} users, need at least 2`
-                );
-            }
+        const user_ids = userEvents.map(user => user.user_id);
+        // Check if we have enough users for pairing
+        if (user_ids.length < 2) {
+            throw new MatchAssignmentException(
+                `Insufficient users for matching. Found ${user_ids.length} users, minimum required: 2`,
+                'INSUFFICIENT_USERS',
+                400
+            );
+        }
 
-            // Get current round number
-            const currentRound = await this.getCurrentRoundNumber(eventId);
-            const nextRound = currentRound + 1;
+        // Get current round number and raise
+        const currentRound = await this.getCurrentRoundNumber(eventId);
+        const nextRound = currentRound + 1;
 
-            // Shuffle before pairing for randomization
-            const shuffled_user_ids: number[] = this.shuffleArray([...user_ids]); // Create copy to avoid mutation
-            const pairs: [number, number][] = this.getNonOverlappingPairs(shuffled_user_ids);
+        // Shuffle before pairing for randomization
+        const shuffled_user_ids: number[] = await this.shuffleArray([...user_ids]); // Create copy to avoid mutation
+        const pairs: [number, number][] = await this.getNonOverlappingPairs(shuffled_user_ids);
 
-            if (pairs.length === 0) {
-                throw new BadRequestException('Unable to create any valid pairs');
-            }
+        if (pairs.length === 0) {
+            throw new MatchAssignmentException(
+                'Unable to create valid user pairs for matching',
+                'PAIRING_FAILED',
+                400
+            );
+        }
 
-            // Create the match entities
-            const matches: Match[] = pairs.map(([user1Id, user2Id]) => {
-                return this.matchRepo.create({
-                    user1: { id: user1Id },
-                    user2: { id: user2Id },
-                    event_id: eventId,
-                    round_number: nextRound
-                });
+        // Create the match entities
+        const matches: Match[] = pairs.map(([user1Id, user2Id]) => {
+            return this.matchRepo.create({
+                user1: { id: user1Id },
+                user2: { id: user2Id },
+                event_id: eventId,
+                round_number: nextRound
             });
+        });
 
-            // Save all matches in a transaction
-            const savedMatches = await this.matchRepo.save(matches);
+        // Save all matches in a transaction
+        const savedMatches = await this.matchRepo.save(matches);
 
-            // Send all matched users mail ( send in parallel )
-            for (const savedMatch of savedMatches) {
-                const pair = userEvents.filter(u =>
-                    [savedMatch.user1_id, savedMatch.user2_id].includes(u.user_id),
-                );
+        // Send all matched users mail ( send in parallel )
+        this.sendMatchNotifications(savedMatches, userEvents).catch(error => {
+            this.logger.error('Failed to send match notification emails', {
+                error: error.message,
+                eventId,
+                round: nextRound,
+            });
+        });
 
-                const sendEmails = pair.map(userEvent => {
+        // TODO: create proper output
+        return savedMatches;
+    }
+
+    // private methode that handles sending match emails ( handlers failed dispatches accordingly )
+    private async sendMatchNotifications(
+        savedMatches: Match[],
+        userEvents: any[]
+    ): Promise<void> {
+        const emailPromises: Promise<any>[] = [];
+        const failedEmails: string[] = [];
+
+        for (const savedMatch of savedMatches) {
+            const pair = userEvents.filter(u =>
+                [savedMatch.user1_id, savedMatch.user2_id].includes(u.user_id),
+            );
+
+            const pairEmailPromises = pair.map(async userEvent => {
+                try {
                     const matchedUser = pair.find(u => u.user_id !== userEvent.user_id)!;
-
-                    return this.mailService.sendMatchMail(
+                    return await this.mailService.sendMatchMail(
                         userEvent.user.email,
                         userEvent.user.name,
                         matchedUser.user.name,
                         userEvent.event.location,
                     );
-                });
+                } catch (error) {
+                    failedEmails.push(userEvent.user.email);
+                    this.logger.warn(`Failed to send email to ${userEvent.user.email}`, error);
+                    throw error;
+                }
+            });
 
+            emailPromises.push(...pairEmailPromises);
+        }
 
-                await Promise.all(sendEmails);
-            }
-
-            return savedMatches;
+        // promise.all() will reject immediately upon any of the input promises rejecting. 
+        // In comparison, the promise returned by Promise.allSettled() will wait for all input promises to complete
+        try {
+            await Promise.allSettled(emailPromises);
         } catch (error) {
-            // Re-throw known exceptions
-            if (
-                error instanceof BadRequestException ||
-                error instanceof NotFoundException ||
-                error instanceof InternalServerErrorException
-            ) {
-                throw error;
-            }
+            throw new EmailServiceException(
+                'Some notification emails failed to send',
+                failedEmails
+            );
+        }
 
-            // Handle database constraint violations
-            if (error.code === '23505') { // Unique constraint violation
-                throw new ConflictException(
-                    'Matches for this round already exist'
-                );
-            }
-
-            if (error.code === '23503') { // Foreign key constraint
-                throw new NotFoundException(
-                    'One or more users/events not found'
-                );
-            }
-
-            throw new InternalServerErrorException(
-                `Failed to assign matches: ${error.message}`
+        if (failedEmails.length > 0) {
+            throw new EmailServiceException(
+                `Failed to send emails to ${failedEmails.length} recipients`,
+                failedEmails
             );
         }
     }
+
 
     private async getCurrentRoundNumber(eventId: number): Promise<number> {
         try {
@@ -205,7 +229,7 @@ export class MatchService {
     }
 
     // Fisher–Yates Shuffle - https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
-    private shuffleArray(array: number[]): number[] {
+    private async shuffleArray(array: number[]): Promise<number[]> {
         for (let i = array.length - 1; i > 0; i--) {
             // Generate a random index j such that 0 ≤ j ≤ i
             const j = Math.floor(Math.random() * (i + 1));
@@ -216,7 +240,7 @@ export class MatchService {
     }
 
     // every element appears exactly once
-    private getNonOverlappingPairs(userIds: number[]): [number, number][] {
+    private async getNonOverlappingPairs(userIds: number[]): Promise<[number, number][]> {
         const pairs: [number, number][] = [];
         for (let i = 0; i < userIds.length - 1; i += 2) {
             pairs.push([userIds[i], userIds[i + 1]]);
