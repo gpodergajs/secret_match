@@ -192,12 +192,12 @@ export class MatchService {
                         userEvent.event.location,
                     );
 
-                    this.logger.log(`Successfully sent match notification emails for user ${userEvent.user.id} and user ${matchedUser.user_id} matches`);
-                    return sentMatchMail
+                    this.logger.log(`Successfully sent match notification emails for user ${userEvent.user.id} and user ${matchedUser.user_id}`);
+                    return { email: userEvent.user.email, success: true };
                 } catch (error) {
-                    failedEmails.push(userEvent.user.email);
                     this.logger.warn(`Failed to send email to ${userEvent.user.email}`, error);
-                    throw error;
+                    //  return a rejected status for Promise.allSettled to pick up
+                    return { email: userEvent.user.email, success: false, error };
                 }
             });
 
@@ -206,14 +206,16 @@ export class MatchService {
 
         // promise.all() will reject immediately upon any of the input promises rejecting. 
         // In comparison, the promise returned by Promise.allSettled() will wait for all input promises to complete
-        try {
-            await Promise.allSettled(emailPromises);
-        } catch (error) {
-            throw new MailServiceException(
-                'Some notification emails failed to send',
-                failedEmails
-            );
-        }
+        const results = await Promise.allSettled(emailPromises);
+        let successCount = 0;
+
+        // iterate through the results to populate failedEmails and handle logging
+        results.forEach(result => {
+            if (result.status === 'fulfilled') {
+                const { email, success } = result.value;
+                success ? successCount : failedEmails.push(email)
+            }
+        });
 
         if (failedEmails.length > 0) {
             throw new MailServiceException(
@@ -222,7 +224,7 @@ export class MatchService {
             );
         }
 
-        this.logger.log(`Successfully sent match notification emails for ${emailPromises.length - failedEmails.length} matches`);
+        this.logger.log(`Successfully sent match notification emails for ${successCount} matches`);
     }
 
 
