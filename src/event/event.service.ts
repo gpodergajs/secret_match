@@ -2,6 +2,7 @@ import { ConflictException, Injectable, InternalServerErrorException, NotFoundEx
 import { Repository } from 'typeorm';
 import { UsersEvents } from './user-events.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EventServiceException } from 'src/common/exceptions/event-service.exception';
 
 @Injectable()
 export class EventService {
@@ -9,32 +10,16 @@ export class EventService {
 
     // find a user for an event
     async findUserEvent(userId: number, eventId: number) {
-        try {
-            const userEvent = await this.userEventsRepository.findOne({
-                where: { user_id: userId, event_id: eventId }
-            });
-
-            return userEvent;
-        } catch (error) {
-            throw new InternalServerErrorException(
-                `Failed to find user event: ${error.message}`
-            );
-        }
+        return await this.userEventsRepository.findOne({
+            where: { user_id: userId, event_id: eventId },
+        });
     }
 
     async findAllEventUsers(eventId: number) {
-        try {
-            const eventUsers = await this.userEventsRepository.find({
-                where: { event_id: eventId },
-                relations: ['user', 'event'] // Include user details if needed
-            });
-
-            return eventUsers;
-        } catch (error) {
-            throw new InternalServerErrorException(
-                `Failed to find event users: ${error.message}`
-            );
-        }
+        return await this.userEventsRepository.find({
+            where: { event_id: eventId },
+            relations: ['user', 'event'] // Include user details if needed
+        });
     }
 
     // create a user in an event
